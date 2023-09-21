@@ -106,3 +106,9 @@ module Polynomial =
   let degree = function
     | [] -> MinusInf
     | p -> Fin <| List.length p - 1
+
+  let addD (d1: Degree) (d2: Degree): Degree =
+    match (d1, d2) with
+      | (MinusInf, _) | (_, MinusInf) -> MinusInf
+      | (Fin f1, Fin f2) -> Fin <| f1 + f2
+    
