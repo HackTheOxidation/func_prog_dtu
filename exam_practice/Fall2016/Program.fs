@@ -119,11 +119,49 @@ module Problem4 =
       let (xs1, ys1) = f t1
       let (xs2, ys2) = f t2
       (xs1@xs2, ys1@ys2)
+
+  let f2 tree =
+    let rec fK t c =
+      match t with
+        | A a -> c ([a], [])
+        | B b -> c ([], [b])
+        | Node (t1, t2) ->
+          fK t1 (fun (xs1, ys1) -> fK t2 (fun (xs2, ys2) -> k(xs1@xs2, ys1@ys2)))
+
+    fK tree id
   
 
 module Problem5 =
   type T<'a> = N of 'a * T<'a> list
 
+  let rec toList (N(v, xs)) = v::List.concat toList xs
+      
+  let rec map f (N(v, xs)) = N(f v, List.map (map f) xs)
+
+  type Path = int list
+
+  let rec isPath is (N(_, xs)) =
+    match is with
+      | [] -> true
+      | i::is when i < List.length xs -> isPath is xs[i]
+      | _ -> false
+
+  let rec get is (N(v, xs)) =
+    match is with
+      | [] -> N(v, xs)
+      | i::is -> get is xs[i]
+
+  let tryFindPathto v t =
+    let rec dfs acc v = function
+      | N(v', []) -> None
+      | N(v', _) when v = v' -> Some <| List.rev acc
+      | N(v', xs) ->
+        xs
+        |> List.mapi (fun i x -> dfs (i::acc) v x)
+        |> List.tryFind Option.isSome 
+        |> Option.flatten
+
+    dfs [] v t
   
 
 [<EntryPoint>]
