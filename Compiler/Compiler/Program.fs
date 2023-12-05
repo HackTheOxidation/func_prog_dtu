@@ -58,6 +58,18 @@ module Compiler =
      
     compileC [] e x
 
+  let rec red = function
+    | Add (C i, C j) -> C (i + j)
+    | Add (e, C 0) | Add (C 0, e) -> red e
+    | Sub (C i, C j) -> C (i - j)
+    | Sub (e, C 0) -> red e
+    | Sub (C 0, e) -> red (Minus e)
+    | Minus (C i) -> C (-i)
+    | Minus (Minus e) -> red e
+    | Abs (C i) -> C (abs i)
+    | Abs (Minus e) -> red e
+    | Abs (Abs e) -> red (Abs e)
+    | e -> e
 
 [<EntryPoint>]
 let main args =
