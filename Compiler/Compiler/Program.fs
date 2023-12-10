@@ -1,6 +1,7 @@
 ﻿
 module Compiler =
 
+  // Types of low-level instructions (assembly-like)
   type Instruction =
     | ADD
     | SUB
@@ -8,8 +9,10 @@ module Compiler =
     | ABS
     | PUSH of int
 
+  // A stack is just a list of values (ints)
   type Stack = int list
 
+  // Operations on the stack 
   let intpInstr stack instr =
     match (stack, instr) with
       | (a::b::rest, ADD) -> (b + a)::rest
@@ -18,11 +21,13 @@ module Compiler =
       | (_, PUSH r) -> r::stack
       | _ -> stack
 
+  // Executes a list of instructions using a stack machine
   let exec (instrs: Instruction list): int =
     instrs
     |> List.fold intpInstr []
     |> List.item 0
 
+  // Expressions for an Abstract Syntax Tree.
   type Exp =
     | X
     | C of int
@@ -31,6 +36,7 @@ module Compiler =
     | Add of Exp * Exp
     | Sub of Exp * Exp
 
+  // Defines the semantics for each expression in the AST.
   let rec sem e x =
     match e with
       | X -> x
@@ -40,6 +46,7 @@ module Compiler =
       | Add (l, r) -> (sem l x) + (sem r x)
       | Sub (l, r) -> (sem l x) - (sem r x)
 
+  // Translates an expression (AST) to a list of instructions (compilation).
   let compile (e: Exp) (x: int): Instruction list =
     let rec compileC (stack: Instruction list) (e: Exp) (x: int): Instruction list =
       match e with
@@ -58,6 +65,21 @@ module Compiler =
      
     compileC [] e x
 
+  // Helper function for tail-recursive continuation-based implementation
+  let rec compileC (stack: Instruction list) (e: Exp) (x: int) acc: Instruction list =
+    match e with
+      | X -> acc <| (PUSH x)::stack
+      | C c -> acc <| (PUSH c)::stack
+      | Abs exp -> compileC (ABS::stack) exp x acc
+      | Add (l, r) ->
+        compileC [] l x (fun left -> compileC [] r x (fun right -> acc (left@right@ADD::stack)))
+      | Sub (l, r) ->
+        compileC [] l x (fun left -> compileC [] r x (fun right -> acc (left@right@SUB::stack)))
+      | _ -> acc stack
+
+  let compileA e x = compileC [] e x id
+
+  // Reduction (optimization) of ASTs.
   let rec red = function
     | Add (C i, C j) -> C (i + j)
     | Add (e, C 0) | Add (C 0, e) -> red e
