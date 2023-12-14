@@ -4,7 +4,7 @@ Just for fun, a snake has come to play.
 from itertools import count
 
 
-# Problem 1 
+# Problem 1
 def dia(n):
     """
     Returns a sequence (read generator) of pairs
@@ -43,4 +43,3 @@ def all_coordinates():
 def all_coordinates2():
     for n in count():
         yield from n % 2 == 0 and dia(n) or flip(dia(n))
-
